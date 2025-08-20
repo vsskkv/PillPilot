@@ -189,21 +189,21 @@ export default function AddMedicationScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <LogoHeader size="medium" />
+        <Text variant="title" size="xl">
+          ✨ Add New Medication
+        </Text>
+        <Text variant="secondary" size="medium" style={styles.subtitle}>
+          Complete medication setup with dosing plan and timing rules
+        </Text>
+      </View>
+
       <KeyboardAvoidingView
-        style={styles.container}
+        style={styles.keyboardContainer}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-          <View style={styles.header}>
-            <LogoHeader size="medium" />
-            <Text variant="title" size="xl">
-              ✨ Add New Medication
-            </Text>
-            <Text variant="secondary" size="medium" style={styles.subtitle}>
-              Complete medication setup with dosing plan and timing rules
-            </Text>
-          </View>
-
           <View style={styles.form}>
             {/* Basic Medication Information */}
             <Card variant="outlined" style={styles.section}>
@@ -443,7 +443,6 @@ export default function AddMedicationScreen() {
               </View>
             </Card>
           </View>
-        </ScrollView>
 
         {/* Form Picker Modal */}
         <Modal
@@ -534,26 +533,27 @@ export default function AddMedicationScreen() {
             </View>
           </View>
         </Modal>
-
-        <View style={styles.footer}>
-          <Button
-            title="Cancel"
-            onPress={handleCancel}
-            variant="secondary"
-            disabled={loading}
-            style={styles.footerButton}
-          />
-          
-          <Button
-            title={loading ? 'Saving...' : 'Save Medication'}
-            onPress={handleSave}
-            variant="primary"
-            disabled={loading}
-            style={styles.footerButton}
-          />
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+
+    <View style={styles.footer}>
+      <Button
+        title="Cancel"
+        onPress={handleCancel}
+        variant="secondary"
+        disabled={loading}
+        style={styles.footerButton}
+      />
+      
+      <Button
+        title={loading ? 'Saving...' : 'Save Medication'}
+        onPress={handleSave}
+        variant="primary"
+        disabled={loading}
+        style={styles.footerButton}
+      />
+    </View>
+  </SafeAreaView>
   );
 }
 
@@ -561,6 +561,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F6F9F9',
+  },
+  keyboardContainer: {
+    flex: 1,
   },
   content: {
     flex: 1,
@@ -612,6 +615,11 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#CFD9D8',
     gap: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 8,
   },
   footerButton: {
     flex: 1,

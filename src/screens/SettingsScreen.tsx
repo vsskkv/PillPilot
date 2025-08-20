@@ -4,17 +4,20 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
+  TouchableOpacity,
+  Switch,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { databaseService } from '../services/DatabaseService';
 import { UserPrefs } from '../types';
 import { getTheme } from '../theme/theme';
-import { Button, Card, Text, Input, LogoHeader, SplashScreen } from '../components/ui';
+import { Button, Card, Text, LogoHeader } from '../components/ui';
 
 export default function SettingsScreen() {
   const [prefs, setPrefs] = useState<UserPrefs | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState<string | null>(null);
   const t = getTheme();
 
   useEffect(() => {
@@ -41,10 +44,10 @@ export default function SettingsScreen() {
     try {
       setLoading(true);
       await databaseService.updateUserPrefs(prefs.id, prefs);
-      Alert.alert('Success', 'Settings saved successfully!');
+      Alert.alert('✅ Success', 'Your settings have been saved successfully!');
     } catch (error) {
       console.error('Error saving preferences:', error);
-      Alert.alert('Error', 'Failed to save settings. Please try again.');
+      Alert.alert('❌ Error', 'Failed to save settings. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -69,21 +72,59 @@ export default function SettingsScreen() {
     updatePrefs({ [field]: value });
   };
 
-  const renderTimePicker = (
+  const formatTime = (time: string) => {
+    if (!time) return 'Not set';
+    return time;
+  };
+
+  const renderTimeSetting = (
     label: string,
     value: string,
-    onTimeChange: (value: string) => void
+    onPress: () => void,
+    icon: string
   ) => (
-    <View style={styles.timePickerRow}>
-      <Text variant="body" size="medium" weight="medium" style={styles.timeLabel}>
-        {label}
-      </Text>
-      <Input
+    <TouchableOpacity style={styles.settingRow} onPress={onPress}>
+      <View style={styles.settingLeft}>
+        <Ionicons name={icon as any} size={20} color={t.color.primary} style={styles.settingIcon} />
+        <Text variant="body" size="medium" weight="medium">
+          {label}
+        </Text>
+      </View>
+      <View style={styles.settingRight}>
+        <Text variant="secondary" size="medium" style={styles.timeValue}>
+          {formatTime(value)}
+        </Text>
+        <Ionicons name="chevron-forward" size={16} color={t.color.textMuted} />
+      </View>
+    </TouchableOpacity>
+  );
+
+  const renderToggleSetting = (
+    label: string,
+    value: boolean,
+    onToggle: (value: boolean) => void,
+    icon: string,
+    description?: string
+  ) => (
+    <View style={styles.settingRow}>
+      <View style={styles.settingLeft}>
+        <Ionicons name={icon as any} size={20} color={t.color.primary} style={styles.settingIcon} />
+        <View style={styles.settingText}>
+          <Text variant="body" size="medium" weight="medium">
+            {label}
+          </Text>
+          {description && (
+            <Text variant="secondary" size="small" style={styles.settingDescription}>
+              {description}
+            </Text>
+          )}
+        </View>
+      </View>
+      <Switch
         value={value}
-        onChangeText={onTimeChange}
-        placeholder="HH:MM"
-        style={styles.timeInput}
-        containerStyle={styles.timeInputContainer}
+        onValueChange={onToggle}
+        trackColor={{ false: '#E0E0E0', true: t.color.primary }}
+        thumbColor={value ? '#FFFFFF' : '#FFFFFF'}
       />
     </View>
   );
@@ -124,7 +165,12 @@ export default function SettingsScreen() {
     
     return (
       <SafeAreaView style={styles.container}>
-        <SplashScreen message="Initializing settings..." />
+        <View style={styles.loadingContainer}>
+          <Ionicons name="settings" size={48} color={t.color.primary} />
+          <Text variant="title" size="large" style={styles.loadingText}>
+            Loading Settings...
+          </Text>
+        </View>
       </SafeAreaView>
     );
   }
@@ -132,9 +178,10 @@ export default function SettingsScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Header */}
         <View style={styles.header}>
           <LogoHeader size="medium" />
-          <Text variant="title" size="xl">
+          <Text variant="title" size="xl" style={styles.title}>
             Settings
           </Text>
           <Text variant="secondary" size="medium" style={styles.subtitle}>
@@ -143,88 +190,155 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.settingsContainer}>
+          {/* Sleep Schedule */}
           <Card variant="default" style={styles.settingGroup}>
-            <Text variant="title" size="large" style={styles.groupTitle}>
-              Sleep Schedule
+            <View style={styles.groupHeader}>
+              <Ionicons name="moon" size={24} color={t.color.primary} />
+              <Text variant="title" size="large" style={styles.groupTitle}>
+                Sleep Schedule
+              </Text>
+            </View>
+            <Text variant="secondary" size="small" style={styles.groupDescription}>
+              Set your bedtime and wake time to optimize medication scheduling
             </Text>
-            {renderTimePicker(
+            
+            {renderTimeSetting(
               'Bedtime',
               prefs.sleepWindow.split('-')[0],
-              (value) => handleTimeChange('sleep', 'start', value)
+              () => setShowTimePicker('sleep-start'),
+              'moon'
             )}
-            {renderTimePicker(
+            {renderTimeSetting(
               'Wake Time',
               prefs.sleepWindow.split('-')[1],
-              (value) => handleTimeChange('sleep', 'end', value)
+              () => setShowTimePicker('sleep-end'),
+              'sunny'
             )}
           </Card>
 
+          {/* Work Hours */}
           <Card variant="default" style={styles.settingGroup}>
-            <Text variant="title" size="large" style={styles.groupTitle}>
-              Work Hours
+            <View style={styles.groupHeader}>
+              <Ionicons name="briefcase" size={24} color={t.color.primary} />
+              <Text variant="title" size="large" style={styles.groupTitle}>
+                Work Hours
+              </Text>
+            </View>
+            <Text variant="secondary" size="small" style={styles.groupDescription}>
+              Define your work schedule for better medication timing
             </Text>
-            {renderTimePicker(
+            
+            {renderTimeSetting(
               'Start Time',
               prefs.workHours.split('-')[0],
-              (value) => handleTimeChange('work', 'start', value)
+              () => setShowTimePicker('work-start'),
+              'time-outline'
             )}
-            {renderTimePicker(
+            {renderTimeSetting(
               'End Time',
               prefs.workHours.split('-')[1],
-              (value) => handleTimeChange('work', 'end', value)
+              () => setShowTimePicker('work-end'),
+              'time-outline'
             )}
           </Card>
 
+          {/* Meal Times */}
           <Card variant="default" style={styles.settingGroup}>
-            <Text variant="title" size="large" style={styles.groupTitle}>
-              Meal Times
+            <View style={styles.groupHeader}>
+              <Ionicons name="restaurant" size={24} color={t.color.primary} />
+              <Text variant="title" size="large" style={styles.groupTitle}>
+                Meal Times
+              </Text>
+            </View>
+            <Text variant="secondary" size="small" style={styles.groupDescription}>
+              Set your regular meal times for medication coordination
             </Text>
-            {renderTimePicker(
+            
+            {renderTimeSetting(
               'Breakfast',
               prefs.breakfastTime,
-              (value) => handleMealTimeChange('breakfastTime', value)
+              () => setShowTimePicker('breakfast'),
+              'cafe-outline'
             )}
-            {renderTimePicker(
+            {renderTimeSetting(
               'Lunch',
               prefs.lunchTime,
-              (value) => handleMealTimeChange('lunchTime', value)
+              () => setShowTimePicker('lunch'),
+              'fast-food-outline'
             )}
-            {renderTimePicker(
+            {renderTimeSetting(
               'Dinner',
               prefs.dinnerTime,
-              (value) => handleMealTimeChange('dinnerTime', value)
+              () => setShowTimePicker('dinner'),
+              'wine-outline'
             )}
-            {renderTimePicker(
+            {renderTimeSetting(
               'Snack',
               prefs.snackTime,
-              (value) => handleMealTimeChange('snackTime', value)
+              () => setShowTimePicker('snack'),
+              'nutrition-outline'
             )}
           </Card>
 
+          {/* Notifications */}
           <Card variant="default" style={styles.settingGroup}>
-            <Text variant="title" size="large" style={styles.groupTitle}>
-              Notifications
-            </Text>
-            <View style={styles.settingRow}>
-              <Text variant="body" size="medium">
-                Notification Style
+            <View style={styles.groupHeader}>
+              <Ionicons name="notifications" size={24} color={t.color.primary} />
+              <Text variant="title" size="large" style={styles.groupTitle}>
+                Notifications
               </Text>
-              <View style={styles.settingValue}>
-                <Text variant="secondary" size="medium">
+            </View>
+            <Text variant="secondary" size="small" style={styles.groupDescription}>
+              Customize how you receive medication reminders
+            </Text>
+            
+            <TouchableOpacity style={styles.settingRow}>
+              <View style={styles.settingLeft}>
+                <Ionicons name="volume-high" size={20} color={t.color.primary} style={styles.settingIcon} />
+                <View style={styles.settingText}>
+                  <Text variant="body" size="medium" weight="medium">
+                    Notification Style
+                  </Text>
+                  <Text variant="secondary" size="small" style={styles.settingDescription}>
+                    Choose how notifications appear
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.settingRight}>
+                <Text variant="secondary" size="medium" style={styles.settingValue}>
                   {prefs.notificationStyle.charAt(0).toUpperCase() + prefs.notificationStyle.slice(1)}
                 </Text>
-                <Ionicons name="chevron-forward" size={20} color={t.color.textMuted} />
+                <Ionicons name="chevron-forward" size={16} color={t.color.textMuted} />
               </View>
-            </View>
+            </TouchableOpacity>
           </Card>
 
+          {/* Save Button */}
           <Button
-            title={loading ? 'Saving...' : 'Save Settings'}
+            title={loading ? 'Saving...' : '💾 Save Settings'}
             onPress={handleSave}
             variant="primary"
             disabled={loading}
             style={styles.saveButton}
           />
+
+          {/* App Info */}
+          <Card variant="default" style={styles.infoCard}>
+            <View style={styles.groupHeader}>
+              <Ionicons name="information-circle" size={24} color={t.color.textMuted} />
+              <Text variant="title" size="medium" style={styles.infoTitle}>
+                App Information
+              </Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text variant="secondary" size="small">Version</Text>
+              <Text variant="body" size="small">1.0.0</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text variant="secondary" size="small">Built with</Text>
+              <Text variant="body" size="small">React Native & Expo</Text>
+            </View>
+          </Card>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -245,6 +359,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#CFD9D8',
   },
+  title: {
+    marginTop: 8,
+  },
   subtitle: {
     marginTop: 4,
   },
@@ -254,44 +371,77 @@ const styles = StyleSheet.create({
   settingGroup: {
     marginBottom: 20,
   },
-  groupTitle: {
-    marginBottom: 16,
-  },
-  timePickerRow: {
+  groupHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 8,
+  },
+  groupTitle: {
+    marginLeft: 12,
+  },
+  groupDescription: {
     marginBottom: 16,
-  },
-  timeLabel: {
-    marginRight: 10,
-  },
-  timeInputContainer: {
-    flex: 1,
-  },
-  timeInput: {
-    flex: 1,
-  },
-  saveButton: {
-    marginTop: 20,
+    marginLeft: 36,
+    lineHeight: 18,
   },
   settingRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
-  settingValue: {
+  settingLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    flex: 1,
+  },
+  settingIcon: {
+    marginRight: 12,
+  },
+  settingText: {
+    flex: 1,
+  },
+  settingDescription: {
+    marginTop: 2,
+    lineHeight: 16,
+  },
+  settingRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  timeValue: {
+    marginRight: 8,
+    fontFamily: 'monospace',
+  },
+  settingValue: {
+    marginRight: 8,
+  },
+  saveButton: {
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  infoCard: {
+    marginBottom: 20,
+  },
+  infoTitle: {
+    marginLeft: 12,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    marginLeft: 36,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#F6F9F9',
+  },
+  loadingText: {
+    marginTop: 16,
   },
 });
