@@ -1,0 +1,28 @@
+{
+  "mode": "dark",
+  "color": {
+    "bg": "#0F1A1B",
+    "surface": "#142022",
+    "surfaceAlt": "#0F2728",
+    "primary": "#3BC5BF",
+    "onPrimary": "#08201F",
+    "primaryMuted": "#0F2728",
+    "accent": "#FF826F",
+    "onAccent": "#1E0A07",
+    "text": "#EAF4F4",
+    "textMuted": "#B3C6C6",
+    "outline": "#2A3A3B",
+    "success": "#3ED497",
+    "warning": "#FFC04A",
+    "danger": "#F07367",
+    "info": "#6CA8FF"
+  },
+  "radius": { "xs": 8, "sm": 12, "md": 16, "lg": 20, "xl": 28, "pill": 999 },
+  "spacing": { "xs": 4, "sm": 8, "md": 12, "lg": 16, "xl": 24, "xxl": 32 },
+  "opacity": { "disabled": 0.45, "overlay": 0.18, "pressed": 0.14 },
+  "elevation": {
+    "e0": { "ios": { "shadowOpacity": 0, "shadowRadius": 0 }, "android": { "elevation": 0 } },
+    "e1": { "ios": { "shadowColor": "#000", "shadowOpacity": 0.25, "shadowRadius": 8, "shadowOffset": {"width":0,"height":4} }, "android": { "elevation": 2 } },
+    "e2": { "ios": { "shadowColor": "#000", "shadowOpacity": 0.3, "shadowRadius": 14, "shadowOffset": {"width":0,"height":8} }, "android": { "elevation": 4 } }
+  }
+}
